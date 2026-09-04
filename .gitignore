@@ -1,0 +1,29 @@
+# Sensitive or large case data
+data/*.jsonl
+data/raw/
+data/private/
+outputs/
+*.jsonl
+*.docx
+*.pdf
+*.zip
+
+# Credentials and local configuration
+.env
+.env.*
+*.key
+secrets/
+
+# Python and editor files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.idea/
+.vscode/
+
+# Generated review artifacts
+review/
+renders/
+*.png
+
