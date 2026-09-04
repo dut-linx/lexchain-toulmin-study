@@ -17,6 +17,7 @@
 ## 仓库结构
 
 - `docs/EXPERIMENT_CHECKLIST.md`：分阶段实验清单、当前状态与验收标准。
+- `docs/D7_API_SCORING_PROTOCOL.md`：依据六维标注手册改造的百分制API评分规则。
 - `docs/DATASET_PROTOCOL.md`：数据集角色、构造方法、信息边界、QC和发布层级。
 - `docs/PAPER_DATASET_SECTION_DRAFT.md`：可继续修改的论文数据集章节草稿。
 - `docs/PAPER_EXPERIMENT_ALIGNMENT.md`：论文引言与实验清单之间的对应关系和设计缺口。
@@ -42,4 +43,3 @@ python -m unittest discover -s tests -p "test_*.py"
 ```
 
 生产数据测试在私有数据不存在时自动跳过，其余测试不需要API密钥，也不会调用外部服务。
-
