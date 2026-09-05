@@ -12,7 +12,7 @@ from typing import Any, Iterable
 
 
 MODEL = "qwen3.7-max"
-PROMPT_VERSION = "main1-seven-conditions-v1"
+PROMPT_VERSION = "main1-seven-conditions-v3-relational-toulmin"
 CONDITIONS = ("B0_DIRECT", "B1_COT", "B2_IRAC", "B3_SYLLOGISM", "B4_SCHEMA", "B5_LEXCHAIN", "T1_TOULMIN")
 COMMON = (
     "你是审理中国民事侵权纠纷一审案件的法律分析者。只能使用给定材料，不得假设法院最终如何裁判，不得补造事实、证据、法条或金额。"
@@ -22,6 +22,7 @@ COMMON = (
     "outcome仅可为full_support、partial_support、rejected、not_addressed，operation仅可为AWARD_MONEY、ORDER_ACT、DISMISS、NOT_ADDRESS。"
     "payment_result包含has_payment、total_awarded_amount、obligations；每项义务包含obligation_id、payer_names、payee_names、related_claim_ids、amount、liability_mode、reason。"
     "对无法从材料可靠确定的结果或金额，明确说明不确定性，不得把未知伪装成确定事实。"
+    "分析应覆盖全部诉请但保持简洁；同一事实或规则只解释一次，后续诉请可以引用，避免重复整段材料。"
 )
 INSTRUCTIONS = {
     "B0_DIRECT": "直接给出案件分析、逐项结论和付款关系。reasoning使用一段连贯文字，不套用指定推理框架。",
@@ -30,7 +31,16 @@ INSTRUCTIONS = {
     "B3_SYLLOGISM": "使用法律三段论。reasoning按每项诉请分别给出规范大前提、事实小前提、涵摄过程和法律结论。",
     "B4_SCHEMA": "使用中性结构化表格思路，但不要使用IRAC、法律三段论、LexChain或图尔敏术语。reasoning按材料要点、规则要点、对应分析、反向检查、结论依据五个中性栏目组织。",
     "B5_LEXCHAIN": "使用贴近中国裁判文书的请求级法律推理链。reasoning逐项组织为诉请与主体、认定事实、裁判规范、要件涵摄、抗辩处理、责任与救济、结论。",
-    "T1_TOULMIN": "使用完整图尔敏论证。reasoning对每项诉请分别给出Claim、Grounds、Warrant、Backing、Qualifier、Rebuttal和Conclusion，并明确事实如何经规则支持结论、抗辩如何影响责任和救济。",
+    "T1_TOULMIN": (
+        "使用单次、强关系约束的完整图尔敏论证，不得请求或模拟第二次修复。reasoning必须建立以下关系链："
+        "D1_claim为每项实体诉请分配唯一claim_id；D2_data提取材料中的事实并分配fact_id，同时列related_claim_ids；"
+        "D3_warrant为规则分配rule_id，列related_claim_ids，并用element_findings逐项引用fact_ids；"
+        "D4_backing使每个rule_id只链接输入候选中的law_ids；D5_rebuttal为材料中真实存在的抗辩分配defense_id并列related_claim_ids，"
+        "说明采纳程度和对责任或金额的影响，无实质抗辩时为空数组；D6_qualifier逐项给出限定条件、证明强度和不确定性；"
+        "D7_conclusion通过claim_id给出最终理由并与claim_results、payment_result完全一致。"
+        "必须满足claim_id→fact_id→rule_id→law_id及defense_id→claim_id的引用可追踪性；"
+        "共同事实和共同规则只定义一次，禁止为每项诉请重复整段内容。"
+    ),
 }
 
 
@@ -76,9 +86,10 @@ def select_cases(rows: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]
 
 def prepare(args: argparse.Namespace) -> int:
     cases = select_cases(read_jsonl(args.blind), args.limit)
+    conditions = tuple(getattr(args, "conditions", CONDITIONS))
     requests = []
     for case in cases:
-        for condition in CONDITIONS:
+        for condition in conditions:
             payload = {"case_id": case["case_id"], "case_material": case["model_input"]}
             requests.append({
                 "custom_id": f"main1:{condition}:{case['case_id']}",
@@ -103,7 +114,7 @@ def prepare(args: argparse.Namespace) -> int:
         "prompt_version": PROMPT_VERSION,
         "model": args.model,
         "cases": len(cases),
-        "conditions": list(CONDITIONS),
+        "conditions": list(conditions),
         "requests": len(requests),
         "temperature": 0,
         "max_tokens": args.max_tokens,
@@ -177,7 +188,14 @@ def parser() -> argparse.ArgumentParser:
     prep.add_argument("--report", type=Path, required=True)
     prep.add_argument("--limit", type=int, default=50)
     prep.add_argument("--model", default=MODEL)
-    prep.add_argument("--max-tokens", type=int, default=4500)
+    prep.add_argument("--max-tokens", type=int, default=9000)
+    prep.add_argument(
+        "--conditions",
+        nargs="+",
+        choices=CONDITIONS,
+        default=list(CONDITIONS),
+        help="Only prepare the selected experimental conditions.",
+    )
     prep.set_defaults(handler=prepare)
     restore = commands.add_parser("ingest")
     restore.add_argument("--batch-result", type=Path, required=True)

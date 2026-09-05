@@ -16,14 +16,18 @@
 
 ## 仓库结构
 
+公开仓库只保留论文实验所需内容：冻结输入、QC参考答案、提示词方法、Batch工具、评分器、实验协议和测试。原始裁判文书及参考答案生产脚本保存在本地。
+
 - `docs/EXPERIMENT_CHECKLIST.md`：分阶段实验清单、当前状态与验收标准。
 - `docs/D7_API_SCORING_PROTOCOL.md`：依据六维标注手册改造的百分制API评分规则。
+- `scripts/judgment_quantitative_scorer.py`：对诉请结果、支持金额和付款关系进行100分确定性量化评分。
+- `scripts/toulmin_three_stage_batch.py`：三次调用、阶段锁定且控制输入长度的图尔敏Batch实验；不执行自动修复。
 - `docs/DATASET_PROTOCOL.md`：数据集角色、构造方法、信息边界、QC和发布层级。
 - `docs/PAPER_DATASET_SECTION_DRAFT.md`：可继续修改的论文数据集章节草稿。
 - `docs/PAPER_EXPERIMENT_ALIGNMENT.md`：论文引言与实验清单之间的对应关系和设计缺口。
 - `docs/GITHUB_UPLOAD.md`：初始化提交和上传GitHub的具体步骤。
 - `manifests/dataset_v0.1.json`：当前私有数据文件的数量、大小和SHA-256摘要。
-- `scripts/`：参考标签抽取、Batch摄取、质量控制和输入输出对齐脚本。
+- `scripts/`：实验提示词、Batch运行和评分脚本。
 - `tests/`：不访问网络的确定性测试。
 
 ## 数据与隐私边界

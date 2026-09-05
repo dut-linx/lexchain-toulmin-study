@@ -4,6 +4,11 @@ data/raw/
 data/private/
 outputs/
 *.jsonl
+!data/experiment_input_v1/
+!data/experiment_input_v1/blind_development.jsonl
+!data/experiment_input_v1/blind_test.jsonl
+!data/experiment_input_v1/split_manifest.jsonl
+!data/experiment_input_v1/reference_all.jsonl
 *.docx
 *.pdf
 *.zip
@@ -27,3 +32,10 @@ review/
 renders/
 *.png
 
+# Local-only gold-dataset production pipeline
+scripts/lexchain_core_gold_api_v2.py
+scripts/lexchain_core_gold_local_v1.py
+scripts/lexchain_qwen_batch_v1.py
+scripts/merge_lexchain_qc_outputs.py
+tests/test_lexchain_core_gold_api_v2.py
+tests/test_lexchain_qwen_batch_v1.py

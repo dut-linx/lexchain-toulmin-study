@@ -79,6 +79,34 @@ class ScoringTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             scorer.normalize_score(raw, "case")
 
+    def test_accepts_dimensions_at_top_level(self):
+        raw = {
+            key: {"applicable": True, "score": 80, "reason": "r"}
+            for key in scorer.DIMENSIONS
+        }
+        result = scorer.normalize_score(raw, "case")
+        self.assertEqual(result["overall_score"], 80)
+
+    def test_accepts_score_inside_band(self):
+        raw = {
+            "dimensions": {
+                key: {"applicable": True, "score": 75}
+                for key in scorer.DIMENSIONS
+            }
+        }
+        result = scorer.normalize_score(raw, "case")
+        self.assertEqual(result["overall_score"], 75)
+
+    def test_rejects_out_of_range_score(self):
+        raw = {
+            "dimensions": {
+                key: {"applicable": True, "score": 101}
+                for key in scorer.DIMENSIONS
+            }
+        }
+        with self.assertRaises(ValueError):
+            scorer.normalize_score(raw, "case")
+
 
 if __name__ == "__main__":
     unittest.main()

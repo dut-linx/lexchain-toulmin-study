@@ -31,8 +31,15 @@
       "sha256": "B1DE5597B608A256932E51C4C30CA9EFB3652E6933307FDC6B79486F51FDA2F8"
     }
   },
+  "public_artifacts": {
+    "blind_development": "data/experiment_input_v1/blind_development.jsonl",
+    "blind_test": "data/experiment_input_v1/blind_test.jsonl",
+    "reference_all": "data/experiment_input_v1/reference_all.jsonl",
+    "split_manifest": "data/experiment_input_v1/split_manifest.jsonl",
+    "freeze_report": "data/experiment_input_v1/freeze_report.json"
+  },
   "scoring": {
-    "rubric_version": "d7-six-dimensions-percent-v1",
+    "rubric_version": "d7-six-dimensions-five-bands-v3",
     "api_model_default": "qwen3.7-max",
     "dimension_range": "0-100",
     "d4_na_allowed": true,

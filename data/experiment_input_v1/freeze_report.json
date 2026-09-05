@@ -1,0 +1,54 @@
+{
+  "schema_version": "lexchain-experiment-freeze-v1",
+  "source": "C:\\Users\\Lin\\Desktop\\fx\\AAAI\\output\\lexchain_qwen_batch_all5134_qwen37max_v4_1_qc2.passed.jsonl",
+  "source_sha256": "65C72B0162261084219ECDC9A6B3A057C6BE1F9EB994530592C4DA8F86D71698",
+  "seed": 20260905,
+  "records": 3161,
+  "development": 300,
+  "test": 2861,
+  "strata_all": {
+    "combined_award": 342,
+    "ip_non_monetary_relief": 11,
+    "multi_party_liability": 116,
+    "multiple_monetary_items": 939,
+    "multiple_payment_obligations": 62,
+    "ordinary_single_relief": 1691
+  },
+  "strata_development": {
+    "combined_award": 32,
+    "ip_non_monetary_relief": 1,
+    "multi_party_liability": 11,
+    "multiple_monetary_items": 89,
+    "multiple_payment_obligations": 6,
+    "ordinary_single_relief": 161
+  },
+  "allowed_model_input_fields": [
+    "case_type",
+    "plaintiff_statement",
+    "defendant_statement",
+    "court_found_facts",
+    "law_candidates"
+  ],
+  "artifacts": {
+    "blind_all": {
+      "path": "C:\\Users\\Lin\\Desktop\\fx\\AAAI\\experiment\\qc3161_v1\\blind_all.jsonl",
+      "sha256": "FAE43BF6179288F20885BEDE20E0C6AC39636588E4A5A91D955A5F1CEAF15DC6"
+    },
+    "blind_development": {
+      "path": "C:\\Users\\Lin\\Desktop\\fx\\AAAI\\experiment\\qc3161_v1\\blind_development.jsonl",
+      "sha256": "C328690001F9FDE7203BD0A7EB5F6B53D20A92BD14C04C4DD8CDF74FCC21D03D"
+    },
+    "blind_test": {
+      "path": "C:\\Users\\Lin\\Desktop\\fx\\AAAI\\experiment\\qc3161_v1\\blind_test.jsonl",
+      "sha256": "5092582E2C729F56D542D061ED66853C086B62652E1C114EB909F1E8BB4EC1F3"
+    },
+    "reference_all": {
+      "path": "C:\\Users\\Lin\\Desktop\\fx\\AAAI\\experiment\\qc3161_v1\\reference_all.jsonl",
+      "sha256": "3FB078F8DD1D5D68327C8FE774C8AD1963C24663CE1F0A2FFD7FE985FAC82BC2"
+    },
+    "split_manifest": {
+      "path": "C:\\Users\\Lin\\Desktop\\fx\\AAAI\\experiment\\qc3161_v1\\split_manifest.jsonl",
+      "sha256": "B1DE5597B608A256932E51C4C30CA9EFB3652E6933307FDC6B79486F51FDA2F8"
+    }
+  }
+}
