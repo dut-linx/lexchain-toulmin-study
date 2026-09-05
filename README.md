@@ -1,44 +1,31 @@
-# LexChain 图尔敏法律推理实验
+# LexChain 图尔敏法律推理与评测
 
-本仓库记录中国民事侵权案件中图尔敏启发法律推理研究的数据集协议、实验方案、评价设计和可复现处理代码。
+本仓库是论文实验的最小可复现Artifact，只保留固定数据集、推理方法、API运行工具、评测器及其协议。原始裁判文书、数据清洗流程和参考答案生产代码不在本仓库中。
 
-## 当前进展
+## 数据集
 
-请求级参考标签生成阶段已经处理5,134条符合条件的案件。每条案件只进行一次Qwen Batch语义生成，5,134条全部成功返回，未出现API失败或JSON摄取错误。
+`data/experiment_input_v1/`包含：
 
-经过确定性质量控制：
+- `blind_development.jsonl`：300条开发集输入；
+- `blind_test.jsonl`：2,861条测试集输入；
+- `reference_all.jsonl`：3,161条QC参考答案，只能用于评分；
+- `split_manifest.jsonl`：固定划分与分层；
+- `freeze_report.json`：数据版本和摘要。
 
-- 3,161条进入`qc_candidate`候选集；
-- 1,973条进入`review_required`人工复核集；
-- 这些结果仍属于机器辅助生成的参考标签候选，尚不能整体称为人工金标准。
+生成模型只能读取`blind_*`文件中的`model_input`，不得读取`reference_all.jsonl`。
 
-结果盲的模型比较实验尚未开始。正式实验前必须完成数据版本冻结、信息泄漏检查、人工标注一致性校准、分组去重与数据切分，并预先锁定提示词和统计方案。
+## 推理脚本
 
-## 仓库结构
+- `scripts/main1_prompt_pilot.py`：Direct、CoT、IRAC、法律三段论、Schema、LexChain及单次强关系图尔敏。
+- `scripts/toulmin_three_stage_batch.py`：三次调用、阶段锁定、无自动修复的图尔敏方法。
+- `scripts/dashscope_batch_file.py`：提交、查询和下载Qwen Batch任务。
 
-公开仓库只保留论文实验所需内容：冻结输入、QC参考答案、提示词方法、Batch工具、评分器、实验协议和测试。原始裁判文书及参考答案生产脚本保存在本地。
+## 评测脚本
 
-- `docs/EXPERIMENT_CHECKLIST.md`：分阶段实验清单、当前状态与验收标准。
-- `docs/D7_API_SCORING_PROTOCOL.md`：依据六维标注手册改造的百分制API评分规则。
-- `scripts/judgment_quantitative_scorer.py`：对诉请结果、支持金额和付款关系进行100分确定性量化评分。
-- `scripts/toulmin_three_stage_batch.py`：三次调用、阶段锁定且控制输入长度的图尔敏Batch实验；不执行自动修复。
-- `docs/DATASET_PROTOCOL.md`：数据集角色、构造方法、信息边界、QC和发布层级。
-- `docs/PAPER_DATASET_SECTION_DRAFT.md`：可继续修改的论文数据集章节草稿。
-- `docs/PAPER_EXPERIMENT_ALIGNMENT.md`：论文引言与实验清单之间的对应关系和设计缺口。
-- `docs/GITHUB_UPLOAD.md`：初始化提交和上传GitHub的具体步骤。
-- `manifests/dataset_v0.1.json`：当前私有数据文件的数量、大小和SHA-256摘要。
-- `scripts/`：实验提示词、Batch运行和评分脚本。
-- `tests/`：不访问网络的确定性测试。
+- `scripts/d7_api_scorer.py`：六维法律说理API评分，采用五个固定20分区间并允许档内整数分。
+- `scripts/judgment_quantitative_scorer.py`：诉请、结果、金额、裁判操作和付款关系的100分确定性评分。
 
-## 数据与隐私边界
-
-案件原文、模型原始输出和API密钥不会进入Git仓库。`.gitignore`已经排除JSONL、Word、PDF、压缩包、环境变量文件及生成结果。仓库只公开代码、协议、汇总统计和文件摘要。
-
-在公开任何案件文本前，必须确认数据来源许可、个人信息处理、匿名化要求和研究伦理或机构审批条件。
-
-## 立即执行的里程碑
-
-在运行MAIN-1之前，依次完成DATA-2至DATA-5和CAL-0。尤其不能把`court_reasoning`、`judgment_result`或根据原判选择的法条候选暴露给结果盲实验条件。
+评分口径见`docs/D7_API_SCORING_PROTOCOL.md`与`docs/JUDGMENT_QUANTITATIVE_SCORING.md`，数据使用边界见`docs/DATASET_PROTOCOL.md`。
 
 ## 本地测试
 
@@ -46,4 +33,4 @@
 python -m unittest discover -s tests -p "test_*.py"
 ```
 
-生产数据测试在私有数据不存在时自动跳过，其余测试不需要API密钥，也不会调用外部服务。
+测试不调用外部API。

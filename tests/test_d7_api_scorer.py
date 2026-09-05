@@ -1,7 +1,5 @@
 import importlib.util
-import json
 import sys
-import tempfile
 import unittest
 from pathlib import Path
 
@@ -18,41 +16,7 @@ def load(name: str, filename: str):
     return module
 
 
-prepare = load("prepare_blind_experiment", "prepare_blind_experiment.py")
 scorer = load("d7_api_scorer", "d7_api_scorer.py")
-
-
-class BlindDatasetTests(unittest.TestCase):
-    def sample(self, index: int):
-        return {
-            "queue_index": index,
-            "case_id": f"c{index}",
-            "train_input": {
-                "case_type": "侵权责任纠纷",
-                "plaintiff_statement": "请求赔偿100元",
-                "defendant_statement": "不同意",
-                "court_found_facts": "查明事实",
-                "court_reasoning": "不得泄漏",
-                "judgment_result": "不得泄漏",
-                "law_candidates": [],
-            },
-            "gold_output": {"claim_results": [], "payment_result": {"obligations": []}},
-            "quality_control": {"passed": True},
-        }
-
-    def test_prepare_is_deterministic_and_blind(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp = Path(tmp)
-            source = tmp / "source.jsonl"
-            source.write_text("\n".join(json.dumps(self.sample(i), ensure_ascii=False) for i in range(10)) + "\n", encoding="utf-8")
-            args = type("Args", (), {"input": source, "output_dir": tmp / "out", "dev_size": 3, "seed": 7})
-            self.assertEqual(prepare.prepare(args), 0)
-            blind = prepare.read_jsonl(tmp / "out" / "blind_all.jsonl")
-            self.assertEqual(sum(r["split"] == "development" for r in blind), 3)
-            encoded = json.dumps(blind, ensure_ascii=False)
-            self.assertNotIn("court_reasoning", encoded)
-            self.assertNotIn("judgment_result", encoded)
-            self.assertNotIn("gold_output", encoded)
 
 
 class ScoringTests(unittest.TestCase):
