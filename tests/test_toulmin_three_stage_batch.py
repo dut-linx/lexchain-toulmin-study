@@ -10,6 +10,12 @@ sys.modules["toulmin_three_stage_batch"] = module; spec.loader.exec_module(modul
 
 
 class ThreeStageTests(unittest.TestCase):
+    def test_final_prompt_requires_compact_escaped_json(self):
+        prompt = module.SYSTEM[3] + module.INSTRUCTION[3]
+        self.assertIn("单行紧凑JSON", prompt)
+        self.assertIn("不得重复事实、规则、法条正文", prompt)
+        self.assertIn("未转义", prompt)
+
     def test_stage1_rejects_short_or_duplicate_claim_ids(self):
         value = {
             "D1_claim": [{"claim_id": "M", "claim_type": "monetary", "item": "损失", "request_text": "赔偿100元", "requested_amount": 100, "parties": {}}],

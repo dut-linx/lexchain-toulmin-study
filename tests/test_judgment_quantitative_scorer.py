@@ -39,6 +39,13 @@ class JudgmentQuantitativeScorerTests(unittest.TestCase):
         result = scorer.score_case(candidate, gold)
         self.assertLess(result["total_score"], 70)
 
+    def test_generation_failure_always_scores_zero(self):
+        candidate, gold = self.fixture()
+        candidate["generation_error"] = True
+        result = scorer.score_case(candidate, gold)
+        self.assertEqual(result["total_score"], 0)
+        self.assertTrue(result["generation_error"])
+
 
 if __name__ == "__main__":
     unittest.main()

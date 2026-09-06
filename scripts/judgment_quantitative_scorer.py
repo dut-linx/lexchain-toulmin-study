@@ -100,6 +100,24 @@ def obligation_similarity(predicted: dict[str, Any], gold: dict[str, Any], id_ma
 
 
 def score_case(candidate: dict[str, Any], reference: dict[str, Any]) -> dict[str, Any]:
+    if candidate.get("generation_error") is True:
+        zero_components = {
+            "claim_alignment": 0.0, "outcome_classification": 0.0,
+            "awarded_amount": 0.0, "operation": 0.0,
+            "payment_total": 0.0, "payment_relation": 0.0,
+        }
+        return {
+            "case_id": candidate.get("case_id"), "condition": candidate.get("condition"),
+            "total_score": 0.0, "components": zero_components,
+            "raw_metrics": {
+                "predicted_claims": 0, "gold_claims": len(reference["gold_output"].get("claim_results", [])),
+                "matched_claims": 0, "claim_f1": 0.0, "outcome_accuracy": 0.0,
+                "requested_amount_accuracy": 0.0, "awarded_amount_similarity": 0.0,
+                "awarded_amount_exact_rate": 0.0, "operation_accuracy": 0.0,
+                "payment_total_similarity": 0.0, "payment_relation_similarity": 0.0,
+            },
+            "claim_matches": [], "generation_error": True,
+        }
     output = candidate.get("model_output", candidate)
     gold_output = reference["gold_output"]
     predicted_claims = output.get("claim_results", []) if isinstance(output, dict) else []

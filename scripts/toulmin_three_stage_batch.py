@@ -11,14 +11,14 @@ from pathlib import Path
 from typing import Any
 
 MODEL = "qwen3.7-max"
-VERSION = "toulmin-three-stage-locked-v2"
+VERSION = "toulmin-three-stage-locked-v3-compact-final"
 OUTCOMES = {"full_support", "partial_support", "rejected", "not_addressed"}
 OPERATIONS = {"AWARD_MONEY", "ORDER_ACT", "DISMISS", "NOT_ADDRESS"}
 
 SYSTEM = {
     1: "你只负责诉请和事实抽取，不预测结果，不补造材料。严格按字段契约输出单个JSON对象。",
     2: "你只负责规则适用和抗辩。D1/D2已经锁定，所有ID必须原样引用，不得修改、缩写或新增。严格按字段契约输出单个JSON对象。",
-    3: "你只负责限定条件和最终裁判。D1-D5已经锁定，不得新增事实、法条、诉请、金额来源或当事人。严格按字段契约输出单个JSON对象。",
+    3: "你只负责限定条件和最终裁判。D1-D5已经锁定，不得新增事实、法条、诉请、金额来源或当事人。严格按字段契约输出单行紧凑JSON对象，不要Markdown、缩进或换行。字符串内部不得出现未转义的双引号、反斜杠或控制字符。",
 }
 
 INSTRUCTION = {
@@ -30,7 +30,7 @@ INSTRUCTION = {
 规则：claim_id和fact_id必须逐字符复制锁定输入；不得使用M、N等缩写，不得添加新诉请或事实。每个element_findings只能引用已有fact_id。D4只能使用候选law_id。材料没有实质抗辩时D5_rebuttal为空数组。不得输出最终outcome、operation或金额。""",
     3: """仅输出以下完整结构，不得改名、缺字段或增加替代字段：
 {"reasoning":{"D6_qualifier":[{"claim_id":"已有claim_id","strength":"high或medium或low","limitations":["限定"],"uncertainty":"说明"}],"D7_conclusion":[{"claim_id":"已有claim_id","decision_reason":"结论理由","fact_ids":["已有fact_id"],"rule_ids":["已有rule_id"],"law_ids":["候选law_id"],"defense_ids":["已有defense_id"]}]},"claim_results":[{"claim_id":"已有claim_id","claim_type":"monetary或non_monetary","item":"复制D1","request_text":"复制D1","requested_amount":"复制D1数字或null","outcome":"full_support或partial_support或rejected或not_addressed","awarded_amount":"数字或null","operation":"AWARD_MONEY或ORDER_ACT或DISMISS或NOT_ADDRESS","decision_reason":"简短理由"}],"payment_result":{"has_payment":"boolean","total_awarded_amount":"数字或null","obligations":[{"obligation_id":"O1并连续编号","payer_names":["D1/D5已有名称"],"payee_names":["D1已有名称"],"related_claim_ids":["已有且获金钱支持的claim_id"],"amount":"数字","liability_mode":"individual或joint或several或supplementary或insurance_limit或unknown","reason":"简短理由"}]}}
-规则：每个D1 claim_id在claim_results和D7中恰好出现一次且逐字符复制。monetary rejected的awarded_amount=0；not_addressed=null；non_monetary始终为null。金钱给付用AWARD_MONEY，行为救济用ORDER_ACT，驳回用DISMISS。has_payment=false时total_awarded_amount=null且obligations=[]；true时总额必须与付款义务一致。不得把payment_result输出为数组。""",
+规则：每个D1 claim_id在claim_results和D7中恰好出现一次且逐字符复制。D7_conclusion只能填写ID列表和一句简短decision_reason，不得重复事实、规则、法条正文或D1-D5内容；D6每项limitations最多2条，uncertainty最多一句；其他reason字段也只写一句。monetary rejected的awarded_amount=0；not_addressed=null；non_monetary始终为null。金钱给付用AWARD_MONEY，行为救济用ORDER_ACT，驳回用DISMISS。has_payment=false时total_awarded_amount=null且obligations=[]；true时总额必须与付款义务一致。不得把payment_result输出为数组。输出必须是单行紧凑合法JSON；所有字符串中的双引号、反斜杠和换行必须按JSON规则转义，禁止尾随逗号。""",
 }
 
 
