@@ -227,15 +227,18 @@ def validate(stage: int, value: Any, prior1: dict[str, Any] | None = None, prior
 def prepare(args: argparse.Namespace) -> int:
     cases = select_cases(read(args.blind), args.limit)
     p1, p2 = indexed(args.stage1), indexed(args.stage2)
+    missing_prior = [str(case["case_id"]) for case in cases if (args.stage >= 2 and str(case["case_id"]) not in p1) or (args.stage == 3 and str(case["case_id"]) not in p2)]
+    if missing_prior and not args.allow_missing_prior:
+        raise SystemExit(f"missing prior stage for {missing_prior[0]}")
+    if missing_prior:
+        cases = [case for case in cases if str(case["case_id"]) not in set(missing_prior)]
     rows = []
     for case in cases:
         cid = str(case["case_id"])
-        if (args.stage >= 2 and cid not in p1) or (args.stage == 3 and cid not in p2):
-            raise SystemExit(f"missing prior stage for {cid}")
         payload = stage_payload(args.stage, case, p1.get(cid), p2.get(cid))
         rows.append({"custom_id": f"toulmin3:s{args.stage}:{cid}", "method": "POST", "url": "/v1/chat/completions", "body": {"model": args.model, "messages": [{"role": "system", "content": SYSTEM[args.stage]}, {"role": "user", "content": INSTRUCTION[args.stage] + "\n输入：" + json.dumps(payload, ensure_ascii=False, separators=(",", ":"))}], "temperature": 0, "enable_thinking": False, "max_tokens": args.max_tokens or (6000 if args.stage == 3 else 3500)}})
     write(args.output, rows)
-    print(json.dumps({"version": VERSION, "stage": args.stage, "requests": len(rows), "model": args.model, "selected_case_ids": [str(case["case_id"]) for case in cases]}, ensure_ascii=False))
+    print(json.dumps({"version": VERSION, "stage": args.stage, "requests": len(rows), "model": args.model, "selected_case_ids": [str(case["case_id"]) for case in cases], "skipped_missing_prior": missing_prior}, ensure_ascii=False))
     return 0
 
 
@@ -268,7 +271,7 @@ def parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__); sub = parser.add_subparsers(dest="command", required=True)
     command = sub.add_parser("prepare"); command.add_argument("--stage", type=int, choices=(1, 2, 3), required=True); command.add_argument("--blind", type=Path, required=True)
     command.add_argument("--stage1", type=Path); command.add_argument("--stage2", type=Path); command.add_argument("--output", type=Path, required=True)
-    command.add_argument("--limit", type=int, default=50); command.add_argument("--model", default=MODEL); command.add_argument("--max-tokens", type=int); command.set_defaults(handler=prepare)
+    command.add_argument("--limit", type=int, default=50); command.add_argument("--model", default=MODEL); command.add_argument("--max-tokens", type=int); command.add_argument("--allow-missing-prior", action="store_true"); command.set_defaults(handler=prepare)
     command = sub.add_parser("ingest"); command.add_argument("--stage", type=int, choices=(1, 2, 3), required=True); command.add_argument("--batch-result", type=Path, required=True)
     command.add_argument("--blind", type=Path); command.add_argument("--stage1", type=Path); command.add_argument("--stage2", type=Path); command.add_argument("--output", type=Path, required=True); command.add_argument("--errors", type=Path, required=True); command.set_defaults(handler=ingest)
     return parser
