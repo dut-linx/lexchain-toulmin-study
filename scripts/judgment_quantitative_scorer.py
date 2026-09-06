@@ -103,6 +103,9 @@ def score_case(candidate: dict[str, Any], reference: dict[str, Any]) -> dict[str
     output = candidate.get("model_output", candidate)
     gold_output = reference["gold_output"]
     predicted_claims = output.get("claim_results", []) if isinstance(output, dict) else []
+    if not isinstance(predicted_claims, list):
+        predicted_claims = []
+    predicted_claims = [value for value in predicted_claims if isinstance(value, dict)]
     gold_claims = gold_output.get("claim_results", [])
     matches = greedy_match(predicted_claims, gold_claims)
     claim_f1 = f1(len(matches), len(predicted_claims), len(gold_claims))
@@ -113,6 +116,8 @@ def score_case(candidate: dict[str, Any], reference: dict[str, Any]) -> dict[str
     requested = sum(amount_similarity(predicted_claims[pi].get("requested_amount"), gold_claims[gi].get("requested_amount")) for pi, gi, _ in matches) / denom
     id_map = {str(predicted_claims[pi].get("claim_id")): str(gold_claims[gi].get("claim_id")) for pi, gi, _ in matches}
     pp = output.get("payment_result", {}) if isinstance(output, dict) else {}
+    if not isinstance(pp, dict):
+        pp = {}
     gp = gold_output.get("payment_result", {})
     payment_total = 0.5 * float(pp.get("has_payment") == gp.get("has_payment")) + 0.5 * amount_similarity(pp.get("total_awarded_amount"), gp.get("total_awarded_amount"))
     pred_ob = pp.get("obligations", []) if isinstance(pp, dict) else []
