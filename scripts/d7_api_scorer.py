@@ -13,7 +13,7 @@ from typing import Any, Iterable
 
 BATCH_URL = "/v1/chat/completions"
 DEFAULT_MODEL = "qwen3.7-max"
-RUBRIC_VERSION = "d7-six-dimensions-five-bands-v3"
+RUBRIC_VERSION = "d7-six-dimensions-five-bands-v4-separate-amount"
 DIMENSIONS = {
     "D1": "诉请、主体与决定性争点覆盖",
     "D2": "责任规范选择、法源适格与解释",
@@ -62,7 +62,8 @@ def system_prompt() -> str:
         "D4仅在材料确无实质抗辩时输出applicable=false且score=null；不能因模型遗漏抗辩而标N/A。"
         "每个维度必须给出简短理由、案件材料中的证据和待评输出中的证据；找不到证据时使用空字符串。"
         "严重错误约束：D2出现虚构、失效或明显不适格法源时D2不得高于20；D3依赖材料外核心事实时D3不得高于20；"
-        "D5与QC参考答案在主要诉请结论、责任主体、责任形态或金额上实质冲突时D5不得高于20。"
+        "D5与QC参考答案在主要诉请结论、责任主体或责任形态上实质冲突，或金额无材料依据、超过请求上限时，D5不得高于20。"
+        "仅金额数值与参考答案不同（尤其涉及司法酌定）不构成当然致命错误；若推导有依据且未超过请求，可在相应档内评分。金额精确性另由确定性定量评分器评价，避免重复处罚。"
         "只输出一个JSON对象，不要Markdown。"
     )
 
@@ -73,7 +74,7 @@ def rubric() -> dict[str, Any]:
         "D2": "核对责任规范、一般法与特别法、法源真实性有效性及必要解释；虚构失效法源不得高于20。",
         "D3": "核对证据—事实—要件—法律效果链；依赖材料外核心事实不得高于20。",
         "D4": "仅评价材料中实际存在的抗辩、例外和限责，按五档评分；确无实质抗辩=N/A。",
-        "D5": "逐项核对结论理由、责任主体/形态/份额和救济；与参考答案发生主要实质冲突不得高于20。",
+        "D5": "逐项核对结论理由、责任主体/形态/份额和救济证成。主要结论、主体或责任形态冲突，以及无依据或超请求金额不得高于20；单纯金额数值差异不是当然致命错误。",
         "D6": "核对公开可理解、整体融贯、路径清晰、繁简适度和可复核性，按五档评分。",
     }
 
@@ -81,6 +82,7 @@ def rubric() -> dict[str, Any]:
 def build_payload(blind: dict[str, Any], reference: dict[str, Any], candidate: dict[str, Any]) -> dict[str, Any]:
     return {
         "rubric_version": RUBRIC_VERSION,
+        "amount_accuracy_scored_separately": True,
         "scoring_rubric": rubric(),
         "case_material": blind["model_input"],
         "qc_reference_answer": reference["gold_output"],

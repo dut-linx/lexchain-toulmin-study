@@ -20,6 +20,12 @@ scorer = load("d7_api_scorer", "d7_api_scorer.py")
 
 
 class ScoringTests(unittest.TestCase):
+    def test_v4_does_not_make_amount_difference_automatically_fatal(self):
+        prompt = scorer.system_prompt()
+        self.assertIn("金额精确性另由确定性定量评分器", prompt)
+        self.assertIn("单纯金额数值差异不是当然致命错误", scorer.rubric()["D5"])
+        self.assertIn("v4-separate-amount", scorer.RUBRIC_VERSION)
+
     def test_percentage_normalization_and_na(self):
         raw = {
             "dimensions": {
